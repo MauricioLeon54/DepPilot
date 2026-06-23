@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+#
+# Bump the version consistently across Cargo.toml and all npm packages.
+#
+# Usage: scripts/bump-version <version>
+# Example: scripts/bump-version 1.2.0
+#
+set -euo pipefail
+
+NEW_VERSION="${1:-}"
+
+if [[ -z "$NEW_VERSION" ]]; then
+  echo "Error: version argument required." >&2
+  echo "Usage: scripts/bump-version <version>" >&2
+  echo "Example: scripts/bump-version 1.2.0" >&2
+  exit 1
+fi
+
+# Accept X.Y.Z or X.Y.Z-prerelease
+if ! [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9._-]+)?$ ]]; then
+  echo "Error: invalid version '$NEW_VERSION'. Expected semver (e.g. 1.2.0 or 1.2.0-beta.1)." >&2
+  exit 1
+fi
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# ── Cargo.toml ───────────────────────────────────────────────────────────────
+
+bump_cargo() {
+  local file="$ROOT/Cargo.toml"
+  # Only update the package version line, not dependency version fields
+  perl -pi -e 's/^(version\s*=\s*)"[^"]+"/$1"'"$NEW_VERSION"'"/ if $. <= 10' "$file"
+  echo "  ✓ $file"
+}
+
+# ── npm package.json files ────────────────────────────────────────────────────
+
+bump_npm() {
+  local file="$1"
+  node --input-type=module <<EOF
+import { readFileSync, writeFileSync } from 'fs';
+const p = JSON.parse(readFileSync('$file', 'utf8'));
+p.version = '$NEW_VERSION';
+if (p.optionalDependencies) {
+  for (const k of Object.keys(p.optionalDependencies)) {
+    p.optionalDependencies[k] = '$NEW_VERSION';
+  }
+}
+writeFileSync('$file', JSON.stringify(p, null, 2) + '\n');
+EOF
+  echo "  ✓ $file"
+}
+
+echo ""
+echo "Bumping version → $NEW_VERSION"
+echo ""
+
+bump_cargo
+
+NPM_PACKAGES=(
+  "$ROOT/npm/deppilot/package.json"
+  "$ROOT/npm/deppilot-darwin-arm64/package.json"
+  "$ROOT/npm/deppilot-darwin-x64/package.json"
+  "$ROOT/npm/deppilot-linux-x64/package.json"
+  "$ROOT/npm/deppilot-linux-arm64/package.json"
+  "$ROOT/npm/deppilot-win32-x64/package.json"
+)
+
+for pkg in "${NPM_PACKAGES[@]}"; do
+  bump_npm "$pkg"
+done
+
+echo ""
+echo "Done. Files updated for v$NEW_VERSION."
+echo ""
+echo "Next steps:"
+echo "  1. Add CHANGELOG.md entry for v$NEW_VERSION"
+echo "  2. git add -A"
+echo "  3. git commit -m 'chore: release v$NEW_VERSION'"
+echo "  4. git tag v$NEW_VERSION"
+echo "  5. git push origin main v$NEW_VERSION"

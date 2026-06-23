@@ -1,42 +1,128 @@
 name: Release
 
+# Triggered by pushing a version tag: git tag v1.2.3 && git push origin v1.2.3
 on:
   push:
     tags:
-      - 'v*'
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: write   # required to create GitHub Releases
 
 env:
   CARGO_TERM_COLOR: always
-  BINARY_NAME: deppilot
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Job graph:
+#
+#   validate
+#      └─► build (matrix, 5 platforms)
+#             └─► checksum
+#                    ├─► github-release
+#                    │      ├─► publish-crates
+#                    │      ├─► publish-npm
+#                    │      └─► update-homebrew
+# ─────────────────────────────────────────────────────────────────────────────
 
 jobs:
+
+  # ── 1. Pre-flight checks ──────────────────────────────────────────────────
+  validate:
+    name: Validate release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing version: $VERSION"
+
+      - name: Verify Cargo.toml version matches tag
+        run: |
+          CARGO_VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::Cargo.toml version ($CARGO_VERSION) != tag ($TAG_VERSION). Run: scripts/bump-version $TAG_VERSION"
+            exit 1
+          fi
+          echo "Cargo.toml version OK: $CARGO_VERSION"
+
+      - name: Verify npm version matches tag
+        run: |
+          NPM_VERSION=$(node -p "require('./npm/deppilot/package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$NPM_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::npm version ($NPM_VERSION) != tag ($TAG_VERSION). Run: scripts/bump-version $TAG_VERSION"
+            exit 1
+          fi
+          echo "npm version OK: $NPM_VERSION"
+
+      - name: Verify CHANGELOG has entry for this version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if ! grep -q "\[$TAG_VERSION\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md is missing an entry for version $TAG_VERSION"
+            exit 1
+          fi
+          echo "CHANGELOG OK"
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo publish --dry-run
+        run: cargo publish --dry-run
+
+  # ── 2. Build cross-platform binaries ─────────────────────────────────────
   build:
-    name: Build ${{ matrix.target }}
+    name: Build ${{ matrix.artifact_name }}
+    needs: validate
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact: deppilot-linux-x86_64
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            artifact: deppilot-linux-aarch64
-            use_cross: true
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            artifact: deppilot-linux-x86_64-musl
-            use_cross: true
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact: deppilot-macos-x86_64
+          # macOS Apple Silicon (native)
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact: deppilot-macos-aarch64
+            artifact_name: deppilot-macos-aarch64
+            archive: tar.gz
+
+          # macOS Intel (cross-compiled from Apple Silicon runner)
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: deppilot-macos-x86_64
+            archive: tar.gz
+
+          # Linux x86_64, statically linked via musl (broadest compatibility)
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            artifact_name: deppilot-linux-x86_64
+            archive: tar.gz
+            use_cross: true
+
+          # Linux arm64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact_name: deppilot-linux-aarch64
+            archive: tar.gz
+            use_cross: true
+
+          # Windows x64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: deppilot-windows-x86_64.exe
+            artifact_name: deppilot-windows-x86_64
+            archive: zip
+            binary_suffix: .exe
 
     steps:
       - uses: actions/checkout@v4
@@ -61,53 +147,247 @@ jobs:
         if: "!matrix.use_cross"
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Stage binary (Unix)
-        if: matrix.os != 'windows-latest'
-        run: cp target/${{ matrix.target }}/release/${{ env.BINARY_NAME }} ${{ matrix.artifact }}
-
-      - name: Stage binary (Windows)
-        if: matrix.os == 'windows-latest'
+      - name: Package binary (tar.gz)
+        if: matrix.archive == 'tar.gz'
         shell: bash
-        run: cp target/${{ matrix.target }}/release/${{ env.BINARY_NAME }}.exe ${{ matrix.artifact }}
+        run: |
+          cd "target/${{ matrix.target }}/release"
+          tar -czf "${{ matrix.artifact_name }}.tar.gz" deppilot
+          mv "${{ matrix.artifact_name }}.tar.gz" "$GITHUB_WORKSPACE/"
+
+      - name: Package binary (zip)
+        if: matrix.archive == 'zip'
+        shell: bash
+        run: |
+          cd "target/${{ matrix.target }}/release"
+          7z a "${{ matrix.artifact_name }}.zip" deppilot.exe
+          mv "${{ matrix.artifact_name }}.zip" "$GITHUB_WORKSPACE/"
+
+      - name: Verify binary runs
+        shell: bash
+        run: |
+          BINARY="target/${{ matrix.target }}/release/deppilot${{ matrix.binary_suffix }}"
+          # Only run on native targets (can't exec cross-compiled binaries)
+          if [[ "${{ matrix.use_cross }}" != "true" ]]; then
+            "$BINARY" --version
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: ${{ matrix.artifact }}
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}.${{ matrix.archive }}
+          if-no-files-found: error
 
-  release:
-    name: GitHub Release
+  # ── 3. SHA256 checksums ───────────────────────────────────────────────────
+  checksum:
+    name: Generate checksums
     needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      sha256_macos_arm64: ${{ steps.sum.outputs.sha256_macos_arm64 }}
+      sha256_macos_x64:   ${{ steps.sum.outputs.sha256_macos_x64 }}
+      sha256_linux_x64:   ${{ steps.sum.outputs.sha256_linux_x64 }}
+      sha256_linux_arm64: ${{ steps.sum.outputs.sha256_linux_arm64 }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          merge-multiple: true
+
+      - name: Compute SHA256SUMS
+        id: sum
+        run: |
+          cd artifacts/
+          sha256sum *.tar.gz *.zip | tee SHA256SUMS.txt
+
+          echo "sha256_macos_arm64=$(sha256sum deppilot-macos-aarch64.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "sha256_macos_x64=$(sha256sum deppilot-macos-x86_64.tar.gz   | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "sha256_linux_x64=$(sha256sum deppilot-linux-x86_64.tar.gz   | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "sha256_linux_arm64=$(sha256sum deppilot-linux-aarch64.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: checksums
+          path: artifacts/SHA256SUMS.txt
+          if-no-files-found: error
+
+  # ── 4. GitHub Release ─────────────────────────────────────────────────────
+  github-release:
+    name: Create GitHub Release
+    needs: [validate, checksum]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: artifacts/
           merge-multiple: true
 
-      - name: Create checksums
-        run: |
-          cd artifacts
-          sha256sum * > SHA256SUMS.txt
+      - name: List release artifacts
+        run: ls -lh artifacts/
 
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/*
+            artifacts/*.tar.gz
+            artifacts/*.zip
+            artifacts/SHA256SUMS.txt
           generate_release_notes: true
           fail_on_unmatched_files: true
 
-  publish:
+  # ── 5. Publish to crates.io ───────────────────────────────────────────────
+  publish-crates:
     name: Publish to crates.io
-    needs: release
+    needs: [validate, github-release]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+
+      - name: Check secret is set
+        run: |
+          if [ -z "${{ secrets.CARGO_REGISTRY_TOKEN }}" ]; then
+            echo "::error::CARGO_REGISTRY_TOKEN secret is not set. Add it in Settings → Secrets."
+            exit 1
+          fi
+
       - name: Publish
-        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --token "${{ secrets.CARGO_REGISTRY_TOKEN }}"
+
+  # ── 6. Publish to npm ─────────────────────────────────────────────────────
+  publish-npm:
+    name: Publish to npm
+    needs: [validate, github-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check secret is set
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "::error::NPM_TOKEN secret is not set. Add it in Settings → Secrets."
+            exit 1
+          fi
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          merge-multiple: true
+
+      - name: Place binaries into platform packages
+        run: |
+          # darwin-arm64
+          tar -xzf artifacts/deppilot-macos-aarch64.tar.gz -C npm/deppilot-darwin-arm64/bin/
+          chmod +x npm/deppilot-darwin-arm64/bin/deppilot
+
+          # darwin-x64
+          tar -xzf artifacts/deppilot-macos-x86_64.tar.gz -C npm/deppilot-darwin-x64/bin/
+          chmod +x npm/deppilot-darwin-x64/bin/deppilot
+
+          # linux-x64
+          tar -xzf artifacts/deppilot-linux-x86_64.tar.gz -C npm/deppilot-linux-x64/bin/
+          chmod +x npm/deppilot-linux-x64/bin/deppilot
+
+          # linux-arm64
+          tar -xzf artifacts/deppilot-linux-aarch64.tar.gz -C npm/deppilot-linux-arm64/bin/
+          chmod +x npm/deppilot-linux-arm64/bin/deppilot
+
+          # win32-x64 (extract .exe from zip)
+          unzip -j artifacts/deppilot-windows-x86_64.zip deppilot.exe -d npm/deppilot-win32-x64/bin/
+
+      - name: Verify package contents
+        run: |
+          for pkg in deppilot-darwin-arm64 deppilot-darwin-x64 deppilot-linux-x64 deppilot-linux-arm64; do
+            echo "--- $pkg ---"
+            ls -lh npm/$pkg/bin/
+          done
+          echo "--- deppilot-win32-x64 ---"
+          ls -lh npm/deppilot-win32-x64/bin/
+
+      # Platform-specific packages must be published before the root package
+      # because the root's optionalDependencies reference them by exact version.
+      - name: Publish platform packages
+        run: |
+          for pkg in deppilot-darwin-arm64 deppilot-darwin-x64 \
+                     deppilot-linux-x64 deppilot-linux-arm64 deppilot-win32-x64; do
+            echo "Publishing npm/$pkg..."
+            cd "npm/$pkg"
+            npm publish --access public
+            cd ../..
+            echo ""
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish root package
+        run: |
+          cd npm/deppilot
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ── 7. Update Homebrew tap ────────────────────────────────────────────────
+  update-homebrew:
+    name: Update Homebrew tap
+    needs: [validate, checksum, github-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secret is set
+        run: |
+          if [ -z "${{ secrets.HOMEBREW_TAP_TOKEN }}" ]; then
+            echo "::error::HOMEBREW_TAP_TOKEN secret is not set. Add it in Settings → Secrets."
+            exit 1
+          fi
+
+      - name: Checkout Homebrew tap repo
+        uses: actions/checkout@v4
+        with:
+          repository: mauuleo/homebrew-deppilot
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Generate formula from template
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          SHA_MACOS_ARM64="${{ needs.checksum.outputs.sha256_macos_arm64 }}"
+          SHA_MACOS_X64="${{ needs.checksum.outputs.sha256_macos_x64 }}"
+          SHA_LINUX_X64="${{ needs.checksum.outputs.sha256_linux_x64 }}"
+          SHA_LINUX_ARM64="${{ needs.checksum.outputs.sha256_linux_arm64 }}"
+
+          mkdir -p homebrew-tap/Formula
+
+          sed \
+            -e "s/VERSION/$VERSION/g" \
+            -e "s/SHA256_MACOS_ARM64/$SHA_MACOS_ARM64/g" \
+            -e "s/SHA256_MACOS_X64/$SHA_MACOS_X64/g" \
+            -e "s/SHA256_LINUX_X64/$SHA_LINUX_X64/g" \
+            -e "s/SHA256_LINUX_ARM64/$SHA_LINUX_ARM64/g" \
+            homebrew/deppilot.rb.template \
+            > homebrew-tap/Formula/deppilot.rb
+
+          echo "Generated formula:"
+          cat homebrew-tap/Formula/deppilot.rb
+
+      - name: Commit and push formula
+        run: |
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/deppilot.rb
+
+          if git diff --staged --quiet; then
+            echo "Formula unchanged — skipping commit"
+          else
+            git commit -m "Update deppilot to v${{ needs.validate.outputs.version }}"
+            git push
+            echo "Tap updated."
+          fi

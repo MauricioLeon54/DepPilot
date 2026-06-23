@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+#
+# Pre-release sanity checks. Run this before pushing a version tag.
+# All checks must pass for the automated release to succeed.
+#
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+ERRORS=0
+WARNINGS=0
+
+pass()    { echo "  ✓  $1"; }
+fail()    { echo "  ✗  $1"; ERRORS=$((ERRORS + 1)); }
+warn()    { echo "  ⚠  $1"; WARNINGS=$((WARNINGS + 1)); }
+section() { echo ""; echo "$1"; echo "$(echo "$1" | tr '[:print:]' '─')"; }
+
+# ── Extract current version ───────────────────────────────────────────────────
+
+CARGO_VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+NPM_VERSION=$(node -p "require('./npm/deppilot/package.json').version" 2>/dev/null || echo "")
+
+echo ""
+echo "DepPilot release checks — v$CARGO_VERSION"
+echo "══════════════════════════════════════════"
+
+# ── Git state ─────────────────────────────────────────────────────────────────
+
+section "Git"
+
+if git diff --quiet && git diff --cached --quiet; then
+  pass "working tree is clean"
+else
+  fail "working tree has uncommitted changes"
+  git status --short | head -20
+fi
+
+CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "$CURRENT_BRANCH" == "main" ]]; then
+  pass "on main branch"
+else
+  warn "not on main branch (currently on '$CURRENT_BRANCH')"
+fi
+
+if git tag | grep -q "^v$CARGO_VERSION$"; then
+  fail "tag v$CARGO_VERSION already exists — did you forget to bump the version?"
+else
+  pass "tag v$CARGO_VERSION does not exist yet"
+fi
+
+# ── Version consistency ───────────────────────────────────────────────────────
+
+section "Version consistency"
+
+pass "Cargo.toml: $CARGO_VERSION"
+
+if [[ -n "$NPM_VERSION" ]]; then
+  if [[ "$NPM_VERSION" == "$CARGO_VERSION" ]]; then
+    pass "npm package matches: $NPM_VERSION"
+  else
+    fail "npm package version ($NPM_VERSION) does not match Cargo.toml ($CARGO_VERSION)"
+    echo "     Run: scripts/bump-version $CARGO_VERSION"
+  fi
+else
+  fail "could not read npm/deppilot/package.json"
+fi
+
+# Check all platform packages too
+for pkg in npm/deppilot-darwin-arm64 npm/deppilot-darwin-x64 \
+           npm/deppilot-linux-x64 npm/deppilot-linux-arm64 npm/deppilot-win32-x64; do
+  PKG_VER=$(node -p "require('./$pkg/package.json').version" 2>/dev/null || echo "")
+  if [[ "$PKG_VER" == "$CARGO_VERSION" ]]; then
+    pass "$pkg/package.json: $PKG_VER"
+  else
+    fail "$pkg/package.json version ($PKG_VER) does not match $CARGO_VERSION"
+  fi
+done
+
+# ── CHANGELOG ────────────────────────────────────────────────────────────────
+
+section "CHANGELOG"
+
+if grep -q "\[$CARGO_VERSION\]" CHANGELOG.md; then
+  pass "CHANGELOG.md has entry for $CARGO_VERSION"
+else
+  fail "CHANGELOG.md is missing entry for $CARGO_VERSION"
+  echo "     Add: ## [$CARGO_VERSION] - $(date +%Y-%m-%d)"
+fi
+
+# ── Rust build and tests ──────────────────────────────────────────────────────
+
+section "Rust"
+
+echo -n "  …  cargo test (this may take a moment)... "
+if cargo test --quiet 2>&1 | tail -1 | grep -q "ok"; then
+  echo "✓"
+  pass "all tests pass"
+else
+  echo ""
+  fail "cargo test failed"
+fi
+
+echo -n "  …  cargo clippy... "
+if cargo clippy --quiet -- -D warnings 2>/dev/null; then
+  pass "clippy clean"
+else
+  fail "clippy reported errors"
+fi
+
+echo -n "  …  cargo publish --dry-run... "
+OUTPUT=$(cargo publish --dry-run 2>&1)
+if echo "$OUTPUT" | grep -q "^error"; then
+  echo ""
+  fail "cargo publish --dry-run failed"
+  echo "$OUTPUT" | grep "^error" | head -5
+else
+  echo "✓"
+  pass "crate package is valid"
+fi
+
+# ── Summary ───────────────────────────────────────────────────────────────────
+
+echo ""
+echo "══════════════════════════════════════════"
+
+if [[ $ERRORS -eq 0 ]]; then
+  echo ""
+  echo "  All checks passed.  Ready to release v$CARGO_VERSION."
+  echo ""
+  echo "  git tag v$CARGO_VERSION"
+  echo "  git push origin main v$CARGO_VERSION"
+  echo ""
+  exit 0
+else
+  echo ""
+  echo "  $ERRORS error(s) found. Fix them before releasing."
+  if [[ $WARNINGS -gt 0 ]]; then
+    echo "  $WARNINGS warning(s)."
+  fi
+  echo ""
+  exit 1
+fi

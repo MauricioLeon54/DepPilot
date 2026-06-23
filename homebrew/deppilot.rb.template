@@ -1,0 +1,34 @@
+class Deppilot < Formula
+  desc "Dependency update assistant for JavaScript/TypeScript projects"
+  homepage "https://github.com/mauuleo/deppilot"
+  version "VERSION"
+  license "MIT"
+
+  on_macos do
+    if Hardware::CPU.arm?
+      url "https://github.com/mauuleo/deppilot/releases/download/vVERSION/deppilot-macos-aarch64.tar.gz"
+      sha256 "SHA256_MACOS_ARM64"
+    else
+      url "https://github.com/mauuleo/deppilot/releases/download/vVERSION/deppilot-macos-x86_64.tar.gz"
+      sha256 "SHA256_MACOS_X64"
+    end
+  end
+
+  on_linux do
+    if Hardware::CPU.arm?
+      url "https://github.com/mauuleo/deppilot/releases/download/vVERSION/deppilot-linux-aarch64.tar.gz"
+      sha256 "SHA256_LINUX_ARM64"
+    else
+      url "https://github.com/mauuleo/deppilot/releases/download/vVERSION/deppilot-linux-x86_64.tar.gz"
+      sha256 "SHA256_LINUX_X64"
+    end
+  end
+
+  def install
+    bin.install "deppilot"
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/deppilot --version")
+  end
+end

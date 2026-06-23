@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Automated release pipeline: GitHub Releases, crates.io, npm, Homebrew tap
+- npm distribution via platform-specific optional dependencies (same pattern as esbuild)
+- `scripts/bump-version` — atomic version bump across Cargo.toml + all npm packages
+- `scripts/check-release` — pre-release sanity checker (git state, version sync, tests, dry-run)
+- `homebrew/deppilot.rb.template` — Homebrew formula template filled by CI
+- `RELEASING.md` — full release guide with secrets, recovery procedures, and rollback instructions
 - `deppilot update` command — update all or specific dependencies one by one
 - Auto-detection of project root by walking up to the nearest `package.json`
 - Auto-detection of package manager via lock files (`yarn.lock`, `pnpm-lock.yaml`, `package-lock.json`)
