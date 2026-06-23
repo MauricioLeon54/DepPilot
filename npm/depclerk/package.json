@@ -1,5 +1,5 @@
 {
-  "name": "depclerk",
+  "name": "@mauricioleon54/depclerk",
   "version": "0.1.6",
   "description": "Dependency update assistant for JavaScript/TypeScript projects",
   "license": "MIT",

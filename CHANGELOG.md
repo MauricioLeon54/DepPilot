@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Renamed root npm package to `depclerk`
+- Renamed root npm package to `@mauricioleon54/depclerk` (scoped to avoid npm name conflicts)
 - CLI command is now `depclerk`
 
 ## [0.1.5] - 2026-06-23
