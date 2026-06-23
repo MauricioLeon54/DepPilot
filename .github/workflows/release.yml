@@ -60,7 +60,7 @@ jobs:
 
       - name: Verify npm version matches tag
         run: |
-          NPM_VERSION=$(node -p "require('./npm/deppilot/package.json').version")
+          NPM_VERSION=$(node -p "require('./npm/devpilot/package.json').version")
           TAG_VERSION="${GITHUB_REF_NAME#v}"
           if [ "$NPM_VERSION" != "$TAG_VERSION" ]; then
             echo "::error::npm version ($NPM_VERSION) != tag ($TAG_VERSION). Run: scripts/bump-version $TAG_VERSION"
@@ -339,7 +339,7 @@ jobs:
 
       - name: Publish root package
         run: |
-          cd npm/deppilot
+          cd npm/devpilot
           npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

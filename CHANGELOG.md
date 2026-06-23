@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-06-23
+
+### Changed
+
+- Renamed root npm package from `deppilot` to `devpilot` (name was taken on npm)
+- CLI command is now `devpilot` when installed via npm
+
 ## [0.1.3] - 2026-06-23
 
 ### Changed
@@ -47,7 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Beautiful terminal output with colors, icons, spinner, and summary
 - 29 unit tests covering detection, parsing, and command generation
 
-[Unreleased]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.0...v0.1.2
 [0.1.0]: https://github.com/MauricioLeon54/DepPilot/releases/tag/v0.1.0
