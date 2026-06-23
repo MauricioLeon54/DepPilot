@@ -1,14 +1,18 @@
 {
   "name": "deppilot-darwin-arm64",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "macOS arm64 (Apple Silicon) binary for deppilot",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/mauuleo/deppilot.git"
   },
-  "os": ["darwin"],
-  "cpu": ["arm64"],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
   "files": [
     "bin/"
   ],
