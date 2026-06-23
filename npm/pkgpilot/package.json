@@ -1,5 +1,5 @@
 {
-  "name": "devpilot",
+  "name": "pkgpilot",
   "version": "0.1.4",
   "description": "Dependency update assistant for JavaScript/TypeScript projects",
   "license": "MIT",
@@ -19,7 +19,7 @@
     "dependency-management"
   ],
   "bin": {
-    "devpilot": "./bin/deppilot.js"
+    "pkgpilot": "./bin/deppilot.js"
   },
   "files": [
     "bin/"

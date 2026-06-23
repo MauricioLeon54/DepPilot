@@ -58,7 +58,7 @@ echo ""
 bump_cargo
 
 NPM_PACKAGES=(
-  "$ROOT/npm/devpilot/package.json"
+  "$ROOT/npm/pkgpilot/package.json"
   "$ROOT/npm/deppilot-darwin-arm64/package.json"
   "$ROOT/npm/deppilot-darwin-x64/package.json"
   "$ROOT/npm/deppilot-linux-x64/package.json"

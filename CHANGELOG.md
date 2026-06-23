@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Renamed root npm package from `deppilot` to `devpilot` (name was taken on npm)
-- CLI command is now `devpilot` when installed via npm
+- Renamed root npm package to `pkgpilot` (previous names taken on npm)
+- CLI command is now `pkgpilot` when installed via npm
 
 ## [0.1.3] - 2026-06-23
 
