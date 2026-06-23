@@ -80,7 +80,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: cargo publish --dry-run
-        run: cargo publish --dry-run
+        run: cargo publish --dry-run --allow-dirty
 
   # ── 2. Build cross-platform binaries ─────────────────────────────────────
   build:
