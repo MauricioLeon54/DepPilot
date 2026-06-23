@@ -255,7 +255,9 @@ jobs:
           fi
 
       - name: Publish
-        run: cargo publish --token "${{ secrets.CARGO_REGISTRY_TOKEN }}"
+        run: cargo publish --allow-dirty
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   # ── 6. Publish to npm ─────────────────────────────────────────────────────
   publish-npm:
@@ -285,6 +287,13 @@ jobs:
 
       - name: Place binaries into platform packages
         run: |
+          # bin/ dirs are not committed to git — create them first
+          mkdir -p npm/deppilot-darwin-arm64/bin
+          mkdir -p npm/deppilot-darwin-x64/bin
+          mkdir -p npm/deppilot-linux-x64/bin
+          mkdir -p npm/deppilot-linux-arm64/bin
+          mkdir -p npm/deppilot-win32-x64/bin
+
           # darwin-arm64
           tar -xzf artifacts/deppilot-macos-aarch64.tar.gz -C npm/deppilot-darwin-arm64/bin/
           chmod +x npm/deppilot-darwin-arm64/bin/deppilot
@@ -357,6 +366,8 @@ jobs:
           repository: mauuleo/homebrew-deppilot
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-tap
+          # If the tap repo doesn't exist yet, create it first:
+          # https://github.com/new → name: homebrew-deppilot → public → no template
 
       - name: Generate formula from template
         run: |
