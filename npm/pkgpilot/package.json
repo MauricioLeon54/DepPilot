@@ -1,6 +1,6 @@
 {
   "name": "pkgpilot",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Dependency update assistant for JavaScript/TypeScript projects",
   "license": "MIT",
   "repository": {
@@ -28,10 +28,10 @@
     "node": ">=14"
   },
   "optionalDependencies": {
-    "deppilot-darwin-arm64": "0.1.4",
-    "deppilot-darwin-x64": "0.1.4",
-    "deppilot-linux-x64": "0.1.4",
-    "deppilot-linux-arm64": "0.1.4",
-    "deppilot-windows-x64": "0.1.4"
+    "deppilot-darwin-arm64": "0.1.5",
+    "deppilot-darwin-x64": "0.1.5",
+    "deppilot-linux-x64": "0.1.5",
+    "deppilot-linux-arm64": "0.1.5",
+    "deppilot-windows-x64": "0.1.5"
   }
 }

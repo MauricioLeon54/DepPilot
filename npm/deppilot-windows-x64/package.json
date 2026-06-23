@@ -1,6 +1,6 @@
 {
   "name": "deppilot-windows-x64",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Windows x64 binary for deppilot",
   "license": "MIT",
   "repository": {
