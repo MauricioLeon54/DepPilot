@@ -237,8 +237,7 @@ fn update_one(
         });
     }
 
-    let default_msg =
-        git::build_commit_message(&args.commit_template, &dep.name, &dep.version);
+    let default_msg = git::build_commit_message(&args.commit_template, &dep.name, &dep.version);
     let files = ["package.json", pm.lock_file()];
     let (stage_cmd, commit_cmd) = git::preview_commands(&files, &default_msg);
     out.commit_preview(&stage_cmd, &commit_cmd);
@@ -274,10 +273,7 @@ fn update_one(
 }
 
 fn run_pm(pm_name: &str, args: &[String], cwd: &PathBuf, force: bool) -> Result<bool> {
-    let status = Command::new(pm_name)
-        .args(args)
-        .current_dir(cwd)
-        .status()?;
+    let status = Command::new(pm_name).args(args).current_dir(cwd).status()?;
     Ok(status.success() || force)
 }
 

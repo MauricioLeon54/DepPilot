@@ -1,6 +1,6 @@
-use std::path::{Path, PathBuf};
-use anyhow::Result;
 use crate::errors::DepPilotError;
+use anyhow::Result;
+use std::path::{Path, PathBuf};
 
 pub struct ProjectRoot {
     pub path: PathBuf,
@@ -38,8 +38,8 @@ fn find_project_root(start: &Path) -> Option<ProjectRoot> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::fs;
+    use tempfile::TempDir;
 
     #[test]
     fn finds_package_json_in_current_dir() {

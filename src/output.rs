@@ -1,10 +1,10 @@
+use crate::package_json::DependencyKind;
+use crate::package_manager::PackageManager;
+use crate::update::{UpdateResult, UpdateStatus};
 use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::path::Path;
 use std::time::Duration;
-use crate::package_json::DependencyKind;
-use crate::package_manager::PackageManager;
-use crate::update::{UpdateResult, UpdateStatus};
 
 pub struct Output;
 
@@ -21,7 +21,11 @@ impl Output {
     }
 
     pub fn project_root(&self, path: &Path) {
-        println!("  {}  {}", "Project".dimmed(), path.display().to_string().cyan());
+        println!(
+            "  {}  {}",
+            "Project".dimmed(),
+            path.display().to_string().cyan()
+        );
     }
 
     pub fn package_name(&self, name: Option<&str>) {
@@ -36,7 +40,12 @@ impl Output {
             PackageManager::Pnpm => "⚡",
             PackageManager::Npm => "📦",
         };
-        println!("  {}  {} {}", "Manager".dimmed(), icon, pm.name().cyan().bold());
+        println!(
+            "  {}  {} {}",
+            "Manager".dimmed(),
+            icon,
+            pm.name().cyan().bold()
+        );
         println!();
     }
 
@@ -57,7 +66,11 @@ impl Output {
     }
 
     pub fn deps_count(&self, count: usize) {
-        let word = if count == 1 { "dependency" } else { "dependencies" };
+        let word = if count == 1 {
+            "dependency"
+        } else {
+            "dependencies"
+        };
         println!(
             "  {}  {} {}",
             "Updating".dimmed(),
@@ -130,11 +143,7 @@ impl Output {
     }
 
     pub fn committed(&self, message: &str) {
-        println!(
-            "  {}  Committed: {}",
-            "✓".green().bold(),
-            message.dimmed()
-        );
+        println!("  {}  Committed: {}", "✓".green().bold(), message.dimmed());
     }
 
     pub fn commit_skipped(&self) {

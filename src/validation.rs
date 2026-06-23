@@ -1,7 +1,7 @@
+use crate::errors::DepPilotError;
 use anyhow::Result;
 use std::path::PathBuf;
 use std::process::Command;
-use crate::errors::DepPilotError;
 
 pub struct Validator {
     root: PathBuf,

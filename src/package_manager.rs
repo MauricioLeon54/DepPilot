@@ -1,7 +1,7 @@
-use anyhow::Result;
 use crate::errors::DepPilotError;
 use crate::package_json::DependencyKind;
 use crate::project::ProjectRoot;
+use anyhow::Result;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PackageManager {
@@ -124,15 +124,17 @@ pub fn verify_installed(pm: &PackageManager) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::fs;
+    use tempfile::TempDir;
 
     fn make_root(files: &[&str]) -> (TempDir, ProjectRoot) {
         let dir = TempDir::new().unwrap();
         for f in files {
             fs::write(dir.path().join(f), "").unwrap();
         }
-        let root = ProjectRoot { path: dir.path().to_path_buf() };
+        let root = ProjectRoot {
+            path: dir.path().to_path_buf(),
+        };
         (dir, root)
     }
 
@@ -176,7 +178,8 @@ mod tests {
 
     #[test]
     fn yarn_prod_install_args() {
-        let args = PackageManager::Yarn.install_args("axios", "^1.0.0", &DependencyKind::Production);
+        let args =
+            PackageManager::Yarn.install_args("axios", "^1.0.0", &DependencyKind::Production);
         assert_eq!(args, vec!["add", "axios@^1.0.0"]);
     }
 
@@ -194,7 +197,8 @@ mod tests {
 
     #[test]
     fn npm_prod_install_args() {
-        let args = PackageManager::Npm.install_args("react", "^18.0.0", &DependencyKind::Production);
+        let args =
+            PackageManager::Npm.install_args("react", "^18.0.0", &DependencyKind::Production);
         assert_eq!(args, vec!["install", "react@^18.0.0", "--save"]);
     }
 

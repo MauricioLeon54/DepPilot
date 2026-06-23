@@ -1,8 +1,8 @@
+use crate::errors::DepPilotError;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::Path;
-use anyhow::Result;
-use crate::errors::DepPilotError;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DependencyKind {
@@ -38,8 +38,8 @@ pub struct PackageJson {
 
 impl PackageJson {
     pub fn load(path: &Path) -> Result<Self> {
-        let raw = std::fs::read_to_string(path)
-            .map_err(|e| DepPilotError::ParseError(e.to_string()))?;
+        let raw =
+            std::fs::read_to_string(path).map_err(|e| DepPilotError::ParseError(e.to_string()))?;
         serde_json::from_str(&raw)
             .map_err(|e| DepPilotError::ParseError(format!("Invalid JSON: {}", e)).into())
     }
@@ -101,7 +101,9 @@ mod tests {
 
     #[test]
     fn parses_both_sections() {
-        let f = write_pkg(r#"{"dependencies":{"axios":"^1.0.0"},"devDependencies":{"jest":"^29.0.0"}}"#);
+        let f = write_pkg(
+            r#"{"dependencies":{"axios":"^1.0.0"},"devDependencies":{"jest":"^29.0.0"}}"#,
+        );
         let pkg = PackageJson::load(f.path()).unwrap();
         assert_eq!(pkg.dependencies["axios"], "^1.0.0");
         assert_eq!(pkg.dev_dependencies["jest"], "^29.0.0");
@@ -109,7 +111,9 @@ mod tests {
 
     #[test]
     fn all_dependencies_preserves_kind() {
-        let f = write_pkg(r#"{"dependencies":{"axios":"^1.0.0"},"devDependencies":{"jest":"^29.0.0"}}"#);
+        let f = write_pkg(
+            r#"{"dependencies":{"axios":"^1.0.0"},"devDependencies":{"jest":"^29.0.0"}}"#,
+        );
         let pkg = PackageJson::load(f.path()).unwrap();
         let all = pkg.all_dependencies();
         let axios = all.iter().find(|d| d.name == "axios").unwrap();
@@ -120,7 +124,9 @@ mod tests {
 
     #[test]
     fn find_returns_correct_kind() {
-        let f = write_pkg(r#"{"dependencies":{"react":"^18.0.0"},"devDependencies":{"vitest":"^1.0.0"}}"#);
+        let f = write_pkg(
+            r#"{"dependencies":{"react":"^18.0.0"},"devDependencies":{"vitest":"^1.0.0"}}"#,
+        );
         let pkg = PackageJson::load(f.path()).unwrap();
         assert_eq!(pkg.find("react").unwrap().kind, DependencyKind::Production);
         assert_eq!(pkg.find("vitest").unwrap().kind, DependencyKind::Dev);

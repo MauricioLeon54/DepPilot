@@ -11,7 +11,9 @@ pub enum DepPilotError {
     #[error("Multiple lock files detected. Use --package-manager to specify one.")]
     MultipleLockFiles,
 
-    #[error("No lock file found. Cannot detect package manager. Use --package-manager to override.")]
+    #[error(
+        "No lock file found. Cannot detect package manager. Use --package-manager to override."
+    )]
     NoLockFile,
 
     #[error("Package manager '{0}' not found in PATH")]

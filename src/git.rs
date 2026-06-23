@@ -1,7 +1,7 @@
+use crate::errors::DepPilotError;
 use anyhow::Result;
 use std::path::PathBuf;
 use std::process::Command;
-use crate::errors::DepPilotError;
 
 pub struct Git {
     root: PathBuf,
@@ -100,13 +100,18 @@ mod tests {
 
     #[test]
     fn template_with_version_placeholder() {
-        let msg = build_commit_message("chore(deps): update {name} to {version}", "react", "^18.2.0");
+        let msg = build_commit_message(
+            "chore(deps): update {name} to {version}",
+            "react",
+            "^18.2.0",
+        );
         assert_eq!(msg, "chore(deps): update react to ^18.2.0");
     }
 
     #[test]
     fn preview_commands_format() {
-        let (stage, commit) = preview_commands(&["package.json", "yarn.lock"], "chore: update axios");
+        let (stage, commit) =
+            preview_commands(&["package.json", "yarn.lock"], "chore: update axios");
         assert_eq!(stage, "git add package.json yarn.lock");
         assert_eq!(commit, r#"git commit -m "chore: update axios""#);
     }
