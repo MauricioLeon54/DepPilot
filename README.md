@@ -35,7 +35,7 @@ npx deppilot update
 ### Homebrew
 
 ```bash
-brew install mauuleo/deppilot/deppilot
+brew install MauricioLeon54/DepPilot/deppilot
 ```
 
 ### Cargo
@@ -46,7 +46,7 @@ cargo install deppilot
 
 ### Pre-built binary
 
-Grab the binary for your platform from the [releases page](https://github.com/mauuleo/deppilot/releases):
+Grab the binary for your platform from the [releases page](https://github.com/MauricioLeon54/DepPilot/releases):
 
 | Platform | File |
 |---|---|
@@ -58,7 +58,7 @@ Grab the binary for your platform from the [releases page](https://github.com/ma
 
 ```bash
 # macOS example
-curl -LO https://github.com/mauuleo/deppilot/releases/latest/download/deppilot-macos-aarch64.tar.gz
+curl -LO https://github.com/MauricioLeon54/DepPilot/releases/latest/download/deppilot-macos-aarch64.tar.gz
 tar -xzf deppilot-macos-aarch64.tar.gz
 sudo mv deppilot /usr/local/bin/
 ```

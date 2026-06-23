@@ -11,7 +11,7 @@ Thank you for your interest in contributing! This document covers everything you
 ## Setup
 
 ```bash
-git clone https://github.com/mauuleo/deppilot.git
+git clone https://github.com/MauricioLeon54/DepPilot.git
 cd deppilot
 cargo build
 ```

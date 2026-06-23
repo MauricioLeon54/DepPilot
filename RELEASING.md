@@ -21,7 +21,7 @@ Before your **first release**, create the tap repository:
 # On GitHub: create a new public repo named "homebrew-deppilot"
 # Then initialize it locally:
 
-git clone https://github.com/mauuleo/homebrew-deppilot.git
+git clone https://github.com/MauricioLeon54/homebrew-deppilot.git
 cd homebrew-deppilot
 mkdir -p Formula
 touch Formula/.gitkeep
@@ -73,7 +73,7 @@ git tag v1.2.0
 git push origin main v1.2.0
 ```
 
-**5. Watch the workflow**: [github.com/mauuleo/deppilot/actions](https://github.com/mauuleo/deppilot/actions)
+**5. Watch the workflow**: [github.com/MauricioLeon54/DepPilot/actions](https://github.com/MauricioLeon54/DepPilot/actions)
 
 The pipeline runs automatically:
 
@@ -144,7 +144,7 @@ Manually publish what is missing. First download the release artifacts, then:
 ```bash
 # Place binary in package dir
 mkdir -p npm/deppilot-darwin-arm64/bin
-curl -L https://github.com/mauuleo/deppilot/releases/download/v1.2.0/deppilot-macos-aarch64.tar.gz \
+curl -L https://github.com/MauricioLeon54/DepPilot/releases/download/v1.2.0/deppilot-macos-aarch64.tar.gz \
   | tar -xz -C npm/deppilot-darwin-arm64/bin/
 
 cd npm/deppilot-darwin-arm64
@@ -162,11 +162,11 @@ npm deprecate deppilot-darwin-arm64@1.2.0 "Broken release, use 1.2.1"
 Manually update the formula:
 
 ```bash
-git clone https://github.com/mauuleo/homebrew-deppilot.git
+git clone https://github.com/MauricioLeon54/homebrew-deppilot.git
 cd homebrew-deppilot
 
 # Download checksums from the GitHub Release
-curl -L https://github.com/mauuleo/deppilot/releases/download/v1.2.0/SHA256SUMS.txt
+curl -L https://github.com/MauricioLeon54/DepPilot/releases/download/v1.2.0/SHA256SUMS.txt
 
 # Fill in the template manually
 cp path/to/deppilot/homebrew/deppilot.rb.template Formula/deppilot.rb
