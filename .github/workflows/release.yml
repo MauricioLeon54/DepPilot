@@ -241,6 +241,7 @@ jobs:
     name: Publish to crates.io
     needs: [validate, github-release]
     runs-on: ubuntu-latest
+    environment: PROD
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -249,7 +250,7 @@ jobs:
       - name: Check secret is set
         run: |
           if [ -z "${{ secrets.CARGO_REGISTRY_TOKEN }}" ]; then
-            echo "::error::CARGO_REGISTRY_TOKEN secret is not set. Add it in Settings → Secrets."
+            echo "::error::CARGO_REGISTRY_TOKEN is not set. Add it as an Environment Secret under the PROD environment."
             exit 1
           fi
 
@@ -261,6 +262,7 @@ jobs:
     name: Publish to npm
     needs: [validate, github-release]
     runs-on: ubuntu-latest
+    environment: PROD
     steps:
       - uses: actions/checkout@v4
 
@@ -272,7 +274,7 @@ jobs:
       - name: Check secret is set
         run: |
           if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
-            echo "::error::NPM_TOKEN secret is not set. Add it in Settings → Secrets."
+            echo "::error::NPM_TOKEN is not set. Add it as an Environment Secret under the PROD environment."
             exit 1
           fi
 
@@ -338,13 +340,14 @@ jobs:
     name: Update Homebrew tap
     needs: [validate, checksum, github-release]
     runs-on: ubuntu-latest
+    environment: PROD
     steps:
       - uses: actions/checkout@v4
 
       - name: Check secret is set
         run: |
           if [ -z "${{ secrets.HOMEBREW_TAP_TOKEN }}" ]; then
-            echo "::error::HOMEBREW_TAP_TOKEN secret is not set. Add it in Settings → Secrets."
+            echo "::error::HOMEBREW_TAP_TOKEN is not set. Add it as an Environment Secret under the PROD environment."
             exit 1
           fi
 
