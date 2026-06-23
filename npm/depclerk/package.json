@@ -1,6 +1,6 @@
 {
-  "name": "pkgpilot",
-  "version": "0.1.5",
+  "name": "depclerk",
+  "version": "0.1.6",
   "description": "Dependency update assistant for JavaScript/TypeScript projects",
   "license": "MIT",
   "repository": {
@@ -19,7 +19,7 @@
     "dependency-management"
   ],
   "bin": {
-    "pkgpilot": "./bin/deppilot.js"
+    "depclerk": "./bin/deppilot.js"
   },
   "files": [
     "bin/"
@@ -28,10 +28,10 @@
     "node": ">=14"
   },
   "optionalDependencies": {
-    "deppilot-darwin-arm64": "0.1.5",
-    "deppilot-darwin-x64": "0.1.5",
-    "deppilot-linux-x64": "0.1.5",
-    "deppilot-linux-arm64": "0.1.5",
-    "deppilot-windows-x64": "0.1.5"
+    "deppilot-darwin-arm64": "0.1.6",
+    "deppilot-darwin-x64": "0.1.6",
+    "deppilot-linux-x64": "0.1.6",
+    "deppilot-linux-arm64": "0.1.6",
+    "deppilot-windows-x64": "0.1.6"
   }
 }

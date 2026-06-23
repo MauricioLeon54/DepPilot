@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-06-23
+
+### Changed
+
+- Renamed root npm package to `depclerk`
+- CLI command is now `depclerk`
+
 ## [0.1.5] - 2026-06-23
 
 ### Changed
@@ -60,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Beautiful terminal output with colors, icons, spinner, and summary
 - 29 unit tests covering detection, parsing, and command generation
 
-[Unreleased]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/MauricioLeon54/DepPilot/compare/v0.1.2...v0.1.3
