@@ -15,7 +15,7 @@ const PLATFORM_PACKAGES = {
   "darwin-x64":   { pkg: "deppilot-darwin-x64",   bin: "deppilot" },
   "linux-arm64":  { pkg: "deppilot-linux-arm64",  bin: "deppilot" },
   "linux-x64":    { pkg: "deppilot-linux-x64",    bin: "deppilot" },
-  "win32-x64":    { pkg: "deppilot-win32-x64",    bin: "deppilot.exe" },
+  "win32-x64":    { pkg: "deppilot-windows-x64",  bin: "deppilot.exe" },
 };
 
 function resolveBinary() {

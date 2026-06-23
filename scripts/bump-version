@@ -63,7 +63,7 @@ NPM_PACKAGES=(
   "$ROOT/npm/deppilot-darwin-x64/package.json"
   "$ROOT/npm/deppilot-linux-x64/package.json"
   "$ROOT/npm/deppilot-linux-arm64/package.json"
-  "$ROOT/npm/deppilot-win32-x64/package.json"
+  "$ROOT/npm/deppilot-windows-x64/package.json"
 )
 
 for pkg in "${NPM_PACKAGES[@]}"; do

@@ -1,14 +1,14 @@
 {
   "name": "deppilot",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Dependency update assistant for JavaScript/TypeScript projects",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mauuleo/deppilot.git"
+    "url": "https://github.com/MauricioLeon54/DepPilot.git"
   },
-  "homepage": "https://github.com/mauuleo/deppilot",
-  "bugs": "https://github.com/mauuleo/deppilot/issues",
+  "homepage": "https://github.com/MauricioLeon54/DepPilot",
+  "bugs": "https://github.com/MauricioLeon54/DepPilot/issues",
   "keywords": [
     "dependencies",
     "npm",
@@ -28,10 +28,10 @@
     "node": ">=14"
   },
   "optionalDependencies": {
-    "deppilot-darwin-arm64": "0.1.2",
-    "deppilot-darwin-x64": "0.1.2",
-    "deppilot-linux-x64": "0.1.2",
-    "deppilot-linux-arm64": "0.1.2",
-    "deppilot-win32-x64": "0.1.2"
+    "deppilot-darwin-arm64": "0.1.3",
+    "deppilot-darwin-x64": "0.1.3",
+    "deppilot-linux-x64": "0.1.3",
+    "deppilot-linux-arm64": "0.1.3",
+    "deppilot-windows-x64": "0.1.3"
   }
 }

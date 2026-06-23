@@ -292,7 +292,7 @@ jobs:
           mkdir -p npm/deppilot-darwin-x64/bin
           mkdir -p npm/deppilot-linux-x64/bin
           mkdir -p npm/deppilot-linux-arm64/bin
-          mkdir -p npm/deppilot-win32-x64/bin
+          mkdir -p npm/deppilot-windows-x64/bin
 
           # darwin-arm64
           tar -xzf artifacts/deppilot-macos-aarch64.tar.gz -C npm/deppilot-darwin-arm64/bin/
@@ -311,7 +311,7 @@ jobs:
           chmod +x npm/deppilot-linux-arm64/bin/deppilot
 
           # win32-x64 (extract .exe from zip)
-          unzip -j artifacts/deppilot-windows-x86_64.zip deppilot.exe -d npm/deppilot-win32-x64/bin/
+          unzip -j artifacts/deppilot-windows-x86_64.zip deppilot.exe -d npm/deppilot-windows-x64/bin/
 
       - name: Verify package contents
         run: |
@@ -319,15 +319,15 @@ jobs:
             echo "--- $pkg ---"
             ls -lh npm/$pkg/bin/
           done
-          echo "--- deppilot-win32-x64 ---"
-          ls -lh npm/deppilot-win32-x64/bin/
+          echo "--- deppilot-windows-x64 ---"
+          ls -lh npm/deppilot-windows-x64/bin/
 
       # Platform-specific packages must be published before the root package
       # because the root's optionalDependencies reference them by exact version.
       - name: Publish platform packages
         run: |
           for pkg in deppilot-darwin-arm64 deppilot-darwin-x64 \
-                     deppilot-linux-x64 deppilot-linux-arm64 deppilot-win32-x64; do
+                     deppilot-linux-x64 deppilot-linux-arm64 deppilot-windows-x64; do
             echo "Publishing npm/$pkg..."
             cd "npm/$pkg"
             npm publish --access public
@@ -363,7 +363,7 @@ jobs:
       - name: Checkout Homebrew tap repo
         uses: actions/checkout@v4
         with:
-          repository: mauuleo/homebrew-deppilot
+          repository: MauricioLeon54/homebrew-deppilot
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-tap
           # If the tap repo doesn't exist yet, create it first:
